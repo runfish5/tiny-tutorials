@@ -1,87 +1,96 @@
+# main.py (modified for notebook environment)
 import discord
 import tempfile
 import os
 import threading
 import asyncio
+import signal
 from model_config import model  # Import the model from our config file
 
-bot = discord.Bot()
-connections = {}
-should_exit = False
-
-@bot.command()
-async def record(ctx):
-    voice = ctx.author.voice
+class DiscordBot:
+    def __init__(self, model):
+        self.bot = discord.Bot()
+        self.connections = {}
+        self.model = model
+        self.running = False
+        self.bot_task = None
+        self.setup_commands()
     
-    if not voice:
-        await ctx.respond("⚠️ You aren't in a voice channel!")
-        return
-        
-    vc = await voice.channel.connect()
-    connections.update({ctx.guild.id: vc})
-    
-    vc.start_recording(
-        discord.sinks.WaveSink(),
-        lambda sink, channel, *args: once_done(sink, channel, model, *args),
-        ctx.channel,
-    )
-    await ctx.respond("🔴 Listening to this conversation.")
-
-async def once_done(sink, channel, model, *args):
-    recorded_users = [f"<@{user_id}>" for user_id in sink.audio_data.keys()]
-    await sink.vc.disconnect()
-    
-    transcript = ""
-    
-    for user_id, audio in sink.audio_data.items():
-        audio_buffer = audio.file.read()
-        
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as temp_audio:
-            temp_audio.write(audio_buffer)
-            temp_audio.flush()
+    def setup_commands(self):
+        @self.bot.command()
+        async def record(ctx):
+            voice = ctx.author.voice
             
-            result = model.transcribe(temp_audio.name)
+            if not voice:
+                await ctx.respond("⚠️ You aren't in a voice channel!")
+                return
+                
+            vc = await voice.channel.connect()
+            self.connections.update({ctx.guild.id: vc})
             
-        user_transcript = f"\n\nSpeaker {user_id}: {result['text']}"
-        transcript += user_transcript
-    
-    await channel.send(f"<transcript>:\n\n{transcript}\n\n</transcript>")
-
-@bot.command()
-async def stop_recording(ctx):
-    if ctx.guild.id in connections:
-        vc = connections[ctx.guild.id]
-        vc.stop_recording()
-        del connections[ctx.guild.id]
-        await ctx.delete()
-    else:
-        await ctx.respond("🚫 Not recording here")
-
-def input_listener():
-    """Listen for keyboard input to gracefully stop the bot"""
-    global should_exit
-    while not should_exit:
-        user_input = input("Press Enter to stop the bot gracefully...\n")
-        if user_input == "" or user_input:  # Any input will work
-            print("Stopping bot gracefully...")
-            should_exit = True
-            # Schedule the bot to close in the bot's event loop
-            asyncio.run_coroutine_threadsafe(bot.close(), bot.loop)
-            break
-
-if __name__ == "__main__":
-    if model is None:
-        print("Error: Whisper model not loaded. Please run from the notebook.")
-    else:
-        # Start input listener in a separate thread
-        input_thread = threading.Thread(target=input_listener, daemon=True)
-        input_thread.start()
+            vc.start_recording(
+                discord.sinks.WaveSink(),
+                lambda sink, channel, *args: self.once_done(sink, channel, *args),
+                ctx.channel,
+            )
+            await ctx.respond("🔴 Listening to this conversation.")
         
-        print("Bot is starting. Press Enter at any time to stop gracefully.")
-        try:
-            bot.run(os.getenv("DISCORD_BOT_TOKEN"))
-        except Exception as e:
-            print(f"Bot stopped with error: {e}")
-        finally:
-            should_exit = True
-            print("Bot has been stopped.")
+        @self.bot.command()
+        async def stop_recording(ctx):
+            if ctx.guild.id in self.connections:
+                vc = self.connections[ctx.guild.id]
+                vc.stop_recording()
+                del self.connections[ctx.guild.id]
+                await ctx.delete()
+            else:
+                await ctx.respond("🚫 Not recording here")
+    
+    async def once_done(self, sink, channel, *args):
+        recorded_users = [f"<@{user_id}>" for user_id in sink.audio_data.keys()]
+        await sink.vc.disconnect()
+        
+        transcript = ""
+        
+        for user_id, audio in sink.audio_data.items():
+            audio_buffer = audio.file.read()
+            
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as temp_audio:
+                temp_audio.write(audio_buffer)
+                temp_audio.flush()
+                
+                result = self.model.transcribe(temp_audio.name)
+                
+            user_transcript = f"\n\nSpeaker {user_id}: {result['text']}"
+            transcript += user_transcript
+        
+        await channel.send(f"<transcript>:\n\n{transcript}\n\n</transcript>")
+    
+    async def _start_bot(self):
+        """Start the bot in the background"""
+        await self.bot.start(os.getenv("DISCORD_BOT_TOKEN"))
+        
+    def start(self):
+        """Non-blocking method to start the bot"""
+        if self.running:
+            print("Bot is already running")
+            return
+            
+        print("Starting Discord bot... Press Enter in any cell to stop.")
+        self.running = True
+        loop = asyncio.get_event_loop()
+        self.bot_task = loop.create_task(self._start_bot())
+    
+    async def stop(self):
+        """Stop the bot gracefully"""
+        if not self.running:
+            print("Bot is not running")
+            return
+            
+        print("Stopping Discord bot...")
+        self.running = False
+        await self.bot.close()
+        if self.bot_task:
+            if not self.bot_task.done():
+                self.bot_task.cancel()
+            self.bot_task = None
+        print("Discord bot stopped successfully")
