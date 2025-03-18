@@ -5,6 +5,7 @@ import whisper  # Keep whisper import, but don't initialize the model here
 
 bot = discord.Bot()
 connections = {}
+model = None  # Define a global variable to hold the model
 
 @bot.command()
 async def record(ctx):
@@ -54,5 +55,7 @@ async def stop_recording(ctx):
     else:
         await ctx.respond("🚫 Not recording here")
 
-if __name__ == "__main__":
+if __name__ == "__main__" and model is not None:
     bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+else:
+    print("Model not loaded. This script should be run from the notebook.")
