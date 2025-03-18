@@ -1,5 +1,6 @@
 import discord
 import tempfile
+import os
 
 bot = discord.Bot()
 connections = {}
