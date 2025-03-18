@@ -1,11 +1,10 @@
 import discord
 import tempfile
 import os
-import whisper  # Keep whisper import, but don't initialize the model here
+from model_config import model  # Import the model from our config file
 
 bot = discord.Bot()
 connections = {}
-model = None  # Define a global variable to hold the model
 
 @bot.command()
 async def record(ctx):
@@ -20,7 +19,7 @@ async def record(ctx):
     
     vc.start_recording(
         discord.sinks.WaveSink(),
-        lambda sink, channel, *args: once_done(sink, channel, model, *args),  # Pass model here
+        lambda sink, channel, *args: once_done(sink, channel, model, *args),
         ctx.channel,
     )
     await ctx.respond("🔴 Listening to this conversation.")
@@ -55,7 +54,8 @@ async def stop_recording(ctx):
     else:
         await ctx.respond("🚫 Not recording here")
 
-if __name__ == "__main__" and model is not None:
-    bot.run(os.getenv("DISCORD_BOT_TOKEN"))
-else:
-    print("Model not loaded. This script should be run from the notebook.")
+if __name__ == "__main__":
+    if model is None:
+        print("Error: Whisper model not loaded. Please run from the notebook.")
+    else:
+        bot.run(os.getenv("DISCORD_BOT_TOKEN"))
