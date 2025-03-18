@@ -1,14 +1,8 @@
 import discord
 import tempfile
-import whisper
-from dotenv import load_dotenv
-from os import environ as env
 
 bot = discord.Bot()
 connections = {}
-load_dotenv()
-
-model = whisper.load_model("base")
 
 @bot.command()
 async def record(ctx):
@@ -28,7 +22,7 @@ async def record(ctx):
     )
     await ctx.respond("🔴 Listening to this conversation.")
 
-async def once_done(sink, channel, *args):
+async def once_done(sink, channel, model, *args):
     recorded_users = [f"<@{user_id}>" for user_id in sink.audio_data.keys()]
     await sink.vc.disconnect()
     
@@ -58,4 +52,4 @@ async def stop_recording(ctx):
     else:
         await ctx.respond("🚫 Not recording here")
 
-bot.run(env.get("DISCORD_BOT_TOKEN"))
+bot.run(os.getenv("DISCORD_BOT_TOKEN"))
