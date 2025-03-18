@@ -1,9 +1,11 @@
 import discord
 import tempfile
 import os
+import whisper  # Keep whisper import, but don't initialize the model here
 
 bot = discord.Bot()
 connections = {}
+model = None  # Placeholder for the model
 
 @bot.command()
 async def record(ctx):
@@ -18,7 +20,7 @@ async def record(ctx):
     
     vc.start_recording(
         discord.sinks.WaveSink(),
-        once_done,
+        lambda sink, channel, *args: once_done(sink, channel, model, *args),  # Pass model here
         ctx.channel,
     )
     await ctx.respond("🔴 Listening to this conversation.")
@@ -53,4 +55,5 @@ async def stop_recording(ctx):
     else:
         await ctx.respond("🚫 Not recording here")
 
-bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+if __name__ == "__main__":
+    bot.run(os.getenv("DISCORD_BOT_TOKEN"))
