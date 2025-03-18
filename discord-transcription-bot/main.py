@@ -59,3 +59,34 @@ if __name__ == "__main__":
         print("Error: Whisper model not loaded. Please run from the notebook.")
     else:
         bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+
+
+# ==
+import asyncio
+import signal
+import sys
+
+# Add these at the top of your main.py
+def signal_handler(sig, frame):
+    print('Shutting down gracefully...')
+    loop = asyncio.get_event_loop()
+    loop.stop()
+    connections.clear()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+# Then at the end of your file, modify your run statement:
+if __name__ == "__main__":
+    if model is None:
+        print("Error: Whisper model not loaded. Please run from the notebook.")
+    else:
+        try:
+            bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            # Clean up any remaining connections
+            for vc in connections.values():
+                asyncio.run_coroutine_threadsafe(vc.disconnect(), bot.loop)
+            connections.clear()
