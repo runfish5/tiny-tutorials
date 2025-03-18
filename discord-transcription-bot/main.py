@@ -5,7 +5,6 @@ import whisper  # Keep whisper import, but don't initialize the model here
 
 bot = discord.Bot()
 connections = {}
-model = None  # Placeholder for the model
 
 @bot.command()
 async def record(ctx):
