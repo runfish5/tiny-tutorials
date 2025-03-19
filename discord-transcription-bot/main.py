@@ -1,11 +1,13 @@
 import discord
 import tempfile
 import os
-from model_config import model  # Import the model from our config file
+from model_config import model
 import asyncio
 
 bot = discord.Bot()
 connections = {}
+# Add this to track all audio segments with timestamps
+audio_segments = {}
 
 @bot.command()
 async def record(ctx):
@@ -18,14 +20,18 @@ async def record(ctx):
     vc = await voice.channel.connect()
     connections.update({ctx.guild.id: vc})
     
+    # Initialize audio segments for this guild
+    audio_segments[ctx.guild.id] = []
+    
+    # Add a callback to capture audio packets as they come in
     vc.start_recording(
         discord.sinks.WaveSink(),
-        lambda sink, channel, *args: once_done(sink, channel, model, *args),
+        lambda sink, channel, *args: once_done(sink, channel, model, ctx.guild.id, *args),
         ctx.channel,
     )
     await ctx.respond("🔴 Listening to this conversation.")
 
-async def once_done(sink, channel, model, *args):
+async def once_done(sink, channel, model, guild_id, *args):
     recorded_users = [f"<@{user_id}>" for user_id in sink.audio_data.keys()]
     await sink.vc.disconnect()
     
@@ -51,6 +57,8 @@ async def stop_recording(ctx):
         vc = connections[ctx.guild.id]
         vc.stop_recording()
         del connections[ctx.guild.id]
+        if ctx.guild.id in audio_segments:
+            del audio_segments[ctx.guild.id]
         await ctx.respond("🛑 Recording stopped.")
     else:
         await ctx.respond("🚫 Not recording here")
@@ -61,7 +69,7 @@ async def run_bot():
         return
     
     token = os.getenv("DISCORD_BOT_TOKEN")
-    await bot.start(token)  # Start the bot without running the loop ourselves
+    await bot.start(token)
 
 if __name__ == "__main__":
     print("This script is meant to be run from the notebook.")
