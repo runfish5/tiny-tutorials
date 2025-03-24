@@ -56,7 +56,14 @@ async def once_done(sink, channel, *args):
     # Process each user's audio
     for user_id, audio in sink.audio_data.items():
         # Create user-specific directory
-        user_dir = f"recordings/{user_id}"
+        # Gather user metadata
+        member = channel.guild.get_member(user_id)
+        username = member.name if member else "Unknown"
+        discriminator = member.discriminator if member else "0000"
+        
+        
+        
+        user_dir = f"recordings/{username}"
         if not os.path.exists(user_dir):
             os.makedirs(user_dir)
         
@@ -66,10 +73,6 @@ async def once_done(sink, channel, *args):
         with open(audio_path, "wb") as f:
             f.write(audio.file.read())
         
-        # Gather user metadata
-        member = channel.guild.get_member(user_id)
-        username = member.name if member else "Unknown"
-        discriminator = member.discriminator if member else "0000"
         
         # Get the user's recording start time
         recording_start_time = sink.start_times[user_id]
