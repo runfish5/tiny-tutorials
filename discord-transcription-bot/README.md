@@ -30,5 +30,11 @@ Great! So now when we start up the bot somewhere and assign it the secret token,
 # Use the bot in Discord
 
 1. We defined the function to start the Bot in `main.py`, hence you can now add it to the channel by sending `/record` in any chat of voice channels.
-2. When you like to transcribe the conversation, send `stop_recording`, and a new folder will appear (`/content/tiny-tutorials/discord-transcription-bot/recordings/`).
-3. You can transcribe all recordings by running all cells in chapter `Step 3`.
+
+      If it doesn't work, check permissions:
+      * Open the voice channel settings → `Edit Channel` → `Permissions`, and ensure the bot has access.
+      * If the bot isn’t listed, add it directly as a **member**. (Granting permissions to a **role** may not be effective.)
+
+
+3. When you like to transcribe the conversation, send `stop_recording`, and a new folder will appear (`/content/tiny-tutorials/discord-transcription-bot/recordings/`).
+4. You can transcribe all recordings by running all cells in chapter `Step 3`.
