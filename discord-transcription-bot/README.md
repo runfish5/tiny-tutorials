@@ -25,9 +25,10 @@ Great! So when we now start up the bot somewhere and assign it the secret token,
 
 1. Open one of the notebooks from my [jupyter-notebooks directory](https://github.com/runfish5/tiny-tutorials/tree/main/discord-transcription-bot/jupyter-notebooks) in Google Colab. Choose the notebook that matches the ASR model you intend to use for transcription.
 2. `ctrl + H` and search `DISCORD_BOT_TOKEN`. Insert your bot-token at `env_content = """DISCORD_BOT_TOKEN=` or insert the token directly in the .env file for additional token leakage protection. 🛡️
-3. For the whisperx align model, we additionally need the HuggingFace token, which you can create here: https://huggingface.co/settings/tokens.
-4. In Google Colab's left-side menu bar, there is a key icon. Click on it and select `Add new secret.` Name it `HF_TOKEN` and paste your new Huggingface token in there. Toggle the `Notebook access` so it shows a tick.
-5. Now you're all set! 🔗 Run all cells above and including the cell `Execute main.py`. This cell's output should now be `Bot is RUNNING. 🔴 `. Now you can use the bot in Discord.
+3. For the whisperx align model,
+      -  we additionally need the HuggingFace token, which you can create here: https://huggingface.co/settings/tokens.
+      - In Google Colab's left-side menu bar, there is a key icon. Click on it and select `Add new secret.` Name it `HF_TOKEN` and paste your new Huggingface token in there. Toggle the `Notebook access` so it shows a tick.
+4. Now you're all set! 🔗 Run all cells above and including the cell `Execute main.py`. This cell's output should now be `Bot is RUNNING. 🔴 `. Now you can use the bot in Discord.
 
 
 
