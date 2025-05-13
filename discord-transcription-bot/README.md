@@ -34,16 +34,17 @@ Great! So when we now start up the bot somewhere and assign it the secret token,
 
 ## Use the bot in Discord 🎤
 
-1. We defined the function to start the Bot in `main.py`, hence you can now add it to the channel by sending `/record` in any chat of voice channels.
+Before recording, **make sure the bot is running in the Google Colab notebook**. You should see `Bot is RUNNING. 🔴` after running `main.py`.
 
-      If it doesn't work, check permissions:
-      * Open the voice channel settings → `Edit Channel` → `Permissions`, and ensure the bot has access.
-      * If the bot isn’t listed, add it directly as a **member**. (Granting permissions to a **role** may not be effective.)
+1. Once the bot is running, you can start recording by sending `/record` in any voice channel chat.
 
+   If it doesn’t respond, check the bot’s permissions:
 
-3. When you like to transcribe the conversation, send `stop_recording`, and a new folder will appear (`/content/recordings/`).
-4. You can transcribe all recordings by running all cells in chapter `Step 3`.
+   * Go to the voice channel settings → `Edit Channel` → `Permissions`
+   * Make sure the bot has access
+   * If it’s not listed, add it directly as a **member**
 
+2. To stop the recording and save the audio, send `stop_recording`. A new folder will appear at `/content/recordings/`.
 
 
 
